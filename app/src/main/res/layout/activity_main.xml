@@ -7,15 +7,20 @@
     tools:context=".view.MainActivity">
 
     <EditText
-        android:layout_marginVertical="10dp"
+        android:layout_margin="20dp"
+        android:hint="Enter word here."
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/word_editext"
+        android:singleLine="true"
+        android:maxLines="1"
+        android:inputType="text"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="GO"
+        android:maxLines="1"
         android:layout_marginVertical="10dp"
         android:id="@+id/go_button"
         android:layout_below="@+id/word_editext"

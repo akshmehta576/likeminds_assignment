@@ -2,47 +2,72 @@ package com.practice.likemindsassignment.view
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
-import androidx.lifecycle.Observer
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.practice.likemindsassignment.databinding.ActivityMainBinding
+import com.practice.likemindsassignment.model.Definition
+import com.practice.likemindsassignment.model.ResultResponse
 import com.practice.likemindsassignment.viewmodel.ResultViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding : ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ResultViewModel
-    private lateinit var movieAdapter : ResultAdapter
+    private lateinit var resultAdapter: ResultAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        prepareRecyclerView()
+
         viewModel = ViewModelProvider(this)[ResultViewModel::class.java]
+
 
         binding.goButton.setOnClickListener {
             if (binding.wordEditext.text.isNotEmpty()) {
-                var word = binding.wordEditext.text.toString()
+                val word = binding.wordEditext.text.toString().trim()
                 viewModel.getResult(word)
-
-                viewModel.observeMovieLiveData().observe(this, Observer { resultList ->
-                    movieAdapter.setList(resultList)
-                })
-            }
-            else
-            {
-                Toast.makeText(applicationContext, "Enter word please.", Toast.LENGTH_SHORT).show()
+                listofResult()
+            } else {
+                Toast.makeText(
+                    applicationContext,
+                    "Empty.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
     }
 
-    private fun prepareRecyclerView() {
-        movieAdapter = ResultAdapter()
+    private fun listofResult() {
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.listofState.collect {
+                when (it) {
+                    is ResultViewModel.ListState.Success -> {
+                        prepareRecyclerView(it.data.definitions as ArrayList<Definition>)
+                    }
+                    is ResultViewModel.ListState.Error ->
+                    {
+
+                    }
+                    else ->
+                    {
+
+                    }
+                }
+            }
+        }
+    }
+
+    private fun prepareRecyclerView(data: ArrayList<Definition>) {
+        resultAdapter = ResultAdapter(data)
         binding.resultRecyclerview.apply {
-            layoutManager = LinearLayoutManager(applicationContext)
-            adapter = movieAdapter
+            adapter = resultAdapter
+            layoutManager = LinearLayoutManager(context)
         }
     }
 }

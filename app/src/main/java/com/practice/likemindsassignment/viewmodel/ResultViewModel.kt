@@ -1,43 +1,72 @@
 package com.practice.likemindsassignment.viewmodel
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import android.widget.Toast
+import androidx.lifecycle.*
 import com.practice.likemindsassignment.api.ApiHub
 import com.practice.likemindsassignment.di.AppModule
 import com.practice.likemindsassignment.model.Definition
 import com.practice.likemindsassignment.model.ResultResponse
+import com.practice.likemindsassignment.repository.ResultRepository
+import com.practice.likemindsassignment.utils.Resources
+import com.practice.likemindsassignment.view.MainActivity
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Response
+import java.lang.Exception
+import javax.inject.Inject
 
-class ResultViewModel  : ViewModel() {
-    private var resultLiveData = MutableLiveData<List<Definition>>()
+@HiltViewModel
+class ResultViewModel @Inject constructor(private val repository: ResultRepository)  : ViewModel() {
 
+    private val _listofState = MutableStateFlow<ListState>(ListState.Empty)
+    val listofState: StateFlow<ListState> = _listofState.asStateFlow()
     fun getResult(word: String) {
 
-        AppModule.api.getResult(word).enqueue(object : retrofit2.Callback<ResultResponse> {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
 
-            override fun onResponse(
-                call: retrofit2.Call<ResultResponse>,
-                response: Response<ResultResponse>
-            ) {
-                if (response.body() != null) {
-                    resultLiveData.value = response.body()!!.definitions
-                } else {
-                    return
+                when (val response = repository.getResult(word)) {
+                    is Resources.Success -> {
+                        Log.i("datagethere", response.data.toString())
+                        if (response.data != null) {
+                            _listofState.value = ListState.Success(response.data)
+                        }
+                        else
+                        {
+
+                            _listofState.value = ListState.Error(response.message.toString())
+                        }
+
+                    }
+                    is Resources.Error -> {
+
+                        _listofState.value = ListState.Error(response.message.toString())
+                    }
+
+                    else -> {}
                 }
-            }
 
-            override fun onFailure(call: retrofit2.Call<ResultResponse>, t: Throwable) {
 
-                Log.d("error is there", t.message.toString())
+            } catch (e: Exception) {
             }
-        })
+        }
 
 
     }
+    sealed class ListState {
+        data class Success(
+            val data: ResultResponse
+        ) : ListState()
 
-    fun observeMovieLiveData(): LiveData<List<Definition>> {
-        return resultLiveData
+        data class Error(val message: String) : ListState()
+        object Empty : ListState()
     }
 }

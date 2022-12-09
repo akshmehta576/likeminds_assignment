@@ -11,7 +11,7 @@ interface ApiHub
 {
     @Headers("Authorization: Token ${Constants.AUTH_TOKEN}")
     @GET("{word}")
-    fun getResult(
+    suspend fun getResult(
         @Path("word") word : String
-    ) : Call<ResultResponse>
+    ) : Response<ResultResponse>
 }

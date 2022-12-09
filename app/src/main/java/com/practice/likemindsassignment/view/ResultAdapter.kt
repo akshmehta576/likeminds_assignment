@@ -8,17 +8,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.practice.likemindsassignment.R
 import com.practice.likemindsassignment.model.Definition
 
-class ResultAdapter : RecyclerView.Adapter<ResultAdapter.ViewHolder>() {
-    private var resultList = ArrayList<Definition>()
+class ResultAdapter(private val resultList: ArrayList<Definition>) :
+    RecyclerView.Adapter<ResultAdapter.ViewHolder>() {
+
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         var wordTxt: TextView = itemView.findViewById<TextView>(R.id.mean_text)
 
-    }
-    fun setList(resultList : List<Definition>){
-        this.resultList = resultList as ArrayList<Definition>
-        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
